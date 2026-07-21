@@ -2,6 +2,7 @@ import { NextResponse, NextRequest } from 'next/server';
 import sqlite3 from 'sqlite3';
 import path from 'path';
 
+export const dynamic = 'force-dynamic';
 // 1. ตั้งค่าและเชื่อมต่อฐานข้อมูล (จะสร้างไฟล์ gold.db ในโฟลเดอร์หลักอัตโนมัติ)
 const dbPath = path.resolve(process.cwd(), 'data', 'gold.db');
 const db = new (sqlite3.verbose()).Database(dbPath);
