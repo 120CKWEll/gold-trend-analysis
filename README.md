@@ -1,36 +1,99 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+Markdown
+# 🏆 GoldTrend Analysis
 
-## Getting Started
+![GoldTrend Analysis Banner](https://via.placeholder.com/1000x300/16130D/E8C468?text=GoldTrend+Analysis+-+ML+Powered+Forecasting)
 
-First, run the development server:
+**GoldTrend Analysis** เป็นระบบเว็บแอปพลิเคชันสำหรับวิเคราะห์ จัดการ และพยากรณ์ราคาทองคำล่วงหน้า (XAU/USD) ด้วยการใช้ Machine Learning ตัวระบบมาพร้อมกับ Dashboard ที่สวยงามในธีม Dark/Vault ใช้งานง่าย และสามารถจัดการฐานข้อมูลราคาทองคำย้อนหลังได้ในตัว
 
+---
+
+## ✨ Features (ความสามารถหลัก)
+
+- **📈 4-Day Price Forecasting:** พยากรณ์ราคาทองคำล่วงหน้า 4 วันอัตโนมัติด้วย Machine Learning 
+- **📊 Interactive Dashboard:** กราฟเปรียบเทียบแนวโน้มราคาจริง (Actual) และราคาคาดการณ์ (Predicted) พร้อมระบบกรองวันที่
+- **🎯 Model Metrics:** แสดงค่าความแม่นยำของโมเดล AI เช่น R² Score และ Mean Absolute Error (MAE)
+- **⚙️ Data Management (CRUD):** ระบบหลังบ้านสำหรับ เพิ่ม, ดูรายละเอียด, แก้ไข และลบ ข้อมูลราคาทองคำรายวัน (Open, High, Low, Close, Volume)
+- **🎨 Modern UI/UX:** ออกแบบด้วยโทนสี Dark Mode (Vault Theme) สบายตาและดูเป็นมืออาชีพ
+
+---
+
+## 💻 Tech Stack (เทคโนโลยีที่ใช้)
+
+**Frontend:**
+- [Next.js](https://nextjs.org/) / [React](https://reactjs.org/)
+- [TypeScript](https://www.typescriptlang.org/)
+- [Tailwind CSS](https://tailwindcss.com/) (สำหรับจัดหน้า UI)
+- [Recharts](https://recharts.org/) (สำหรับสร้างกราฟประมวลผล)
+- [Lucide React](https://lucide.dev/) (ไอคอน)
+
+**Backend & AI:**
+- Next.js API Routes / Python (FastAPI)
+- Scikit-Learn (Linear Regression Model)
+- Axios (สำหรับจัดการ API Requests)
+
+---
+
+## 📸 Screenshots (ภาพตัวอย่างหน้าจอ)
+
+### 1. Dashboard & Forecasting
+*(อัปโหลดรูปหน้า Dashboard ของคุณลงโฟลเดอร์ `public` แล้วเปลี่ยนลิงก์ด้านล่างนี้)*
+![Dashboard Overview](./public/dashboard-preview.png)
+
+### 2. Database Management
+*(อัปโหลดรูปหน้า Manage Data ของคุณลงโฟลเดอร์ `public` แล้วเปลี่ยนลิงก์ด้านล่างนี้)*
+![Data Management](./public/management-preview.png)
+
+---
+
+## 🚀 Getting Started (วิธีติดตั้งและรันโปรเจกต์)
+
+ทำตามขั้นตอนด้านล่างนี้เพื่อรันโปรเจกต์ในเครื่องของคุณ:
+
+### 1. Clone Repository
 ```bash
+git clone [https://github.com/ช](https://github.com/ช)ื่อผู้ใช้ของคุณ/gold-trend-analysis.git
+cd gold-trend-analysis
+2. Install Dependencies
+ติดตั้งแพ็กเกจที่จำเป็นทั้งหมดผ่าน npm หรือ yarn
+
+Bash
+npm install
+# หรือ
+yarn install
+3. Run the Development Server
+เปิดเซิร์ฟเวอร์จำลองเพื่อดูผลลัพธ์
+
+Bash
 npm run dev
-# or
+# หรือ
 yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+เปิดเบราว์เซอร์แล้วเข้าไปที่ http://localhost:3000 เพื่อดูผลงาน
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+📂 Folder Structure (โครงสร้างไฟล์ที่สำคัญ)
+Plaintext
+📦 gold-trend-analysis
+ ┣ 📂 app
+ ┃ ┣ 📂 api               # Backend API Routes (จัดการข้อมูลพยากรณ์และ CRUD)
+ ┃ ┣ 📜 globals.css       # ไฟล์ CSS หลัก
+ ┃ ┣ 📜 layout.tsx        # โครงสร้าง Layout ของเว็บไซต์
+ ┃ ┗ 📜 page.tsx          # 🌟 หน้าจอหลัก (Dashboard & Management)
+ ┣ 📂 public              # เก็บไฟล์รูปภาพและ Assets ต่างๆ
+ ┣ 📜 package.json        # ระบุ Dependencies ของโปรเจกต์
+ ┗ 📜 README.md           # ไฟล์อธิบายโปรเจกต์ (ไฟล์นี้)
+👤 Author (ผู้จัดทำ)
+[ชื่อ-นามสกุลของคุณ]
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+GitHub: @your-username
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Contact: your-email@example.com
 
-## Learn More
+Project created for educational and analytical purposes.
 
-To learn more about Next.js, take a look at the following resources:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+---
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+**💡 วิธีนำไปใช้:**
+1. ในโฟลเดอร์โปรเจกต์ของคุณ ให้สร้างไฟล์ชื่อ `README.md` (ถ้ายังไม่มี)
+2. ก๊อบปี้ข้อความทั้งหมดด้านบนไปวาง
+3. **อย่าลืมเปลี่ยนข้อความภาษาไทยในวงเล็บ** เช่น `[ชื่อผู้ใช้ของคุณ]` ให้เป็นของตัวเองครับ
+4. ใช้คำสั่ง `git add README.md`, `git commit -m "Add README"`, และ `git push` เพื่ออัปโหลดไฟล์นี้ขึ้น GitHub
