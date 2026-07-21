@@ -8,7 +8,7 @@ Markdown
 
 ---
 
-## ✨ Features (ความสามารถหลัก)
+## ✨ Features 
 
 - **📈 4-Day Price Forecasting:** พยากรณ์ราคาทองคำล่วงหน้า 4 วันอัตโนมัติด้วย Machine Learning 
 - **📊 Interactive Dashboard:** กราฟเปรียบเทียบแนวโน้มราคาจริง (Actual) และราคาคาดการณ์ (Predicted) พร้อมระบบกรองวันที่
@@ -18,14 +18,14 @@ Markdown
 
 ---
 
-## 💻 Tech Stack (เทคโนโลยีที่ใช้)
+## 💻 Tech Stack 
 
 **Frontend:**
 - [Next.js](https://nextjs.org/) / [React](https://reactjs.org/)
 - [TypeScript](https://www.typescriptlang.org/)
-- [Tailwind CSS](https://tailwindcss.com/) (สำหรับจัดหน้า UI)
-- [Recharts](https://recharts.org/) (สำหรับสร้างกราฟประมวลผล)
-- [Lucide React](https://lucide.dev/) (ไอคอน)
+- [Tailwind CSS](https://tailwindcss.com/) 
+- [Recharts](https://recharts.org/) 
+- [Lucide React](https://lucide.dev/) 
 
 **Backend & AI:**
 - Next.js API Routes / Python (FastAPI)
@@ -34,7 +34,7 @@ Markdown
 
 ---
 
-## 📸 Screenshots (ภาพตัวอย่างหน้าจอ)
+## 📸 Screenshots 
 
 ### 1. Dashboard & Forecasting
 <img width="1198" height="1080" alt="image" src="https://github.com/user-attachments/assets/8656aa80-777b-4147-a9f2-c3471c7eef7c" />
@@ -46,13 +46,13 @@ Markdown
 
 ---
 
-## 🚀 Getting Started (วิธีติดตั้งและรันโปรเจกต์)
+## 🚀 Getting Started 
 
 ทำตามขั้นตอนด้านล่างนี้เพื่อรันโปรเจกต์ในเครื่องของคุณ:
 
 ### 1. Clone Repository
 ```bash
-git clone [https://github.com/ช](https://github.com/ชื่อผู้ใช้ของคุณ/gold-trend-analysis.git
+git clone https://github.com/120CKWEll/gold-trend-analysis.git
 cd gold-trend-analysis
 2. Install Dependencies
 ติดตั้งแพ็กเกจที่จำเป็นทั้งหมดผ่าน npm หรือ yarn
@@ -84,17 +84,8 @@ Plaintext
 👤 Author (ผู้จัดทำ)
 [ชื่อ-นามสกุลของคุณ]
 
-GitHub: @your-username
+GitHub: @120CKWEll
 
-Contact: your-email@example.com
+Contact: rmy.tcp@gmail.com
 
 Project created for educational and analytical purposes.
-
-
----
-
-**💡 วิธีนำไปใช้:**
-1. ในโฟลเดอร์โปรเจกต์ของคุณ ให้สร้างไฟล์ชื่อ `README.md` (ถ้ายังไม่มี)
-2. ก๊อบปี้ข้อความทั้งหมดด้านบนไปวาง
-3. **อย่าลืมเปลี่ยนข้อความภาษาไทยในวงเล็บ** เช่น `[ชื่อผู้ใช้ของคุณ]` ให้เป็นของตัวเองครับ
-4. ใช้คำสั่ง `git add README.md`, `git commit -m "Add README"`, และ `git push` เพื่ออัปโหลดไฟล์นี้ขึ้น GitHub
