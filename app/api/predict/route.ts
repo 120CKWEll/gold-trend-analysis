@@ -4,9 +4,10 @@ import fs from 'fs';
 import csv from 'csv-parser';
 import path from 'path';
 
-export async function GET() {
-  return new Promise((resolve) => {
-    // 1. ระบุตำแหน่งไฟล์ (รันจาก Root โฟลเดอร์ของโปรเจกต์)
+// เติม : Promise<Response> เพื่อให้ TypeScript ผ่านการตรวจสอบบน Vercel
+export async function GET(): Promise<Response> {
+  return new Promise<Response>((resolve) => {
+    // 1. ระบุตำแหน่งไฟล์
     const scriptPath = path.resolve(process.cwd(), 'run_predict.py');
     const csvPath = path.resolve(process.cwd(), 'data', 'gold_prediction_final_dashboard.csv');
 
@@ -28,7 +29,7 @@ export async function GET() {
         .pipe(csv())
         .on('data', (data) => results.push(data))
         .on('end', () => {
-          // 4. ส่งผลลัพธ์กลับไปให้หน้า Frontend วาดกราฟ
+          // 4. ส่งผลลัพธ์กลับไปให้หน้า Frontend
           resolve(NextResponse.json(results));
         })
         .on('error', (err) => {
