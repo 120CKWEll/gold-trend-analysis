@@ -1,43 +1,43 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { exec } from 'child_process';
 import { promisify } from 'util';
 import fs from 'fs';
 import csv from 'csv-parser';
 import path from 'path';
 
-// แปลง exec ให้รองรับ async/await
 const execAsync = promisify(exec);
 
-export async function GET(): Promise<Response> {
+// 1. เพิ่ม NextRequest เข้ามาเป็นพารามิเตอร์ (เพื่อระบุว่าเป็น Route Handler)
+// 2. ระบุ : Promise<NextResponse> อย่างชัดเจน
+export async function GET(request: NextRequest): Promise<NextResponse> {
   try {
     const scriptPath = path.resolve(process.cwd(), 'run_predict.py');
     const csvPath = path.resolve(process.cwd(), 'data', 'gold_prediction_final_dashboard.csv');
 
-    // 1. สั่งรัน Python Script
     try {
       await execAsync(`python "${scriptPath}"`);
-    } catch (execErr: any) {
-      console.error("Error Executing Python:", execErr?.message || execErr);
+    } catch (execErr) {
+      console.error("Error Executing Python:", execErr);
       return NextResponse.json({ error: 'Failed to run AI model' }, { status: 500 });
     }
 
-    // 2. ตรวจสอบว่ามีไฟล์ CSV หรือไม่
     if (!fs.existsSync(csvPath)) {
       return NextResponse.json({ error: 'CSV Output not found' }, { status: 404 });
     }
 
-    // 3. อ่านไฟล์ CSV
     const results: any[] = [];
+    
+    // บังคับ Type เป็น Promise<void> ให้ชัดเจน
     await new Promise<void>((resolve, reject) => {
       fs.createReadStream(csvPath)
         .pipe(csv())
-        .on('data', (data) => results.push(data))
+        .on('data', (data: any) => results.push(data))
         .on('end', () => resolve())
-        .on('error', (err) => reject(err));
+        .on('error', (err: any) => reject(err));
     });
 
-    // 4. ส่งผลลัพธ์กลับ
-    return NextResponse.json(results);
+    return NextResponse.json(results, { status: 200 });
+    
   } catch (error) {
     console.error("Error processing forecast:", error);
     return NextResponse.json({ error: 'Failed to process forecast' }, { status: 500 });
