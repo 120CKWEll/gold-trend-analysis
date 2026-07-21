@@ -1,4 +1,3 @@
-Markdown
 # 🏆 GoldTrend Analysis
 
 <img width="1208" height="1008" alt="image" src="https://github.com/user-attachments/assets/4d6a67ca-e7a5-4574-9f8f-70c300e97af8" />
@@ -81,8 +80,9 @@ Plaintext
  ┣ 📂 public              # เก็บไฟล์รูปภาพและ Assets ต่างๆ
  ┣ 📜 package.json        # ระบุ Dependencies ของโปรเจกต์
  ┗ 📜 README.md           # ไฟล์อธิบายโปรเจกต์ (ไฟล์นี้)
-👤 Author (ผู้จัดทำ)
-[ชื่อ-นามสกุลของคุณ]
+
+👤 Author 
+Thatchaphon Khamkamjon
 
 GitHub: @120CKWEll
 
