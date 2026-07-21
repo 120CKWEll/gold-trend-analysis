@@ -374,7 +374,7 @@ export default function Dashboard() {
                       <Tooltip
                         contentStyle={{ borderRadius: '10px', border: '1px solid #33291A', background: '#1C1810', color: '#F3EFE4', boxShadow: '0 8px 20px -4px rgba(0,0,0,0.5)' }}
                         labelStyle={{ color: '#9A9384' }}
-                        formatter={(value: any, name: string) => {
+                        formatter={(value: any, name: any) => {
                           if (value === null || value === undefined || isNaN(value) || value === "NaN") {
                             return ["-", name];
                           }
