@@ -1,7 +1,8 @@
 Markdown
 # 🏆 GoldTrend Analysis
 
-![GoldTrend Analysis Banner](https://via.placeholder.com/1000x300/16130D/E8C468?text=GoldTrend+Analysis+-+ML+Powered+Forecasting)
+<img width="1208" height="1008" alt="image" src="https://github.com/user-attachments/assets/4d6a67ca-e7a5-4574-9f8f-70c300e97af8" />
+
 
 **GoldTrend Analysis** เป็นระบบเว็บแอปพลิเคชันสำหรับวิเคราะห์ จัดการ และพยากรณ์ราคาทองคำล่วงหน้า (XAU/USD) ด้วยการใช้ Machine Learning ตัวระบบมาพร้อมกับ Dashboard ที่สวยงามในธีม Dark/Vault ใช้งานง่าย และสามารถจัดการฐานข้อมูลราคาทองคำย้อนหลังได้ในตัว
 
@@ -36,12 +37,12 @@ Markdown
 ## 📸 Screenshots (ภาพตัวอย่างหน้าจอ)
 
 ### 1. Dashboard & Forecasting
-*(อัปโหลดรูปหน้า Dashboard ของคุณลงโฟลเดอร์ `public` แล้วเปลี่ยนลิงก์ด้านล่างนี้)*
-![Dashboard Overview](./public/dashboard-preview.png)
+<img width="1198" height="1080" alt="image" src="https://github.com/user-attachments/assets/8656aa80-777b-4147-a9f2-c3471c7eef7c" />
+
 
 ### 2. Database Management
-*(อัปโหลดรูปหน้า Manage Data ของคุณลงโฟลเดอร์ `public` แล้วเปลี่ยนลิงก์ด้านล่างนี้)*
-![Data Management](./public/management-preview.png)
+<img width="1234" height="1187" alt="image" src="https://github.com/user-attachments/assets/9c22531c-abed-420f-bf2f-1e11359e544a" />
+
 
 ---
 
@@ -51,7 +52,7 @@ Markdown
 
 ### 1. Clone Repository
 ```bash
-git clone [https://github.com/ช](https://github.com/ช)ื่อผู้ใช้ของคุณ/gold-trend-analysis.git
+git clone [https://github.com/ช](https://github.com/ชื่อผู้ใช้ของคุณ/gold-trend-analysis.git
 cd gold-trend-analysis
 2. Install Dependencies
 ติดตั้งแพ็กเกจที่จำเป็นทั้งหมดผ่าน npm หรือ yarn
