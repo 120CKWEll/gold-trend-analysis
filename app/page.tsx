@@ -93,23 +93,33 @@ export default function Dashboard() {
   const handlePredict = async () => {
     setLoading(true);
     try {
-      // 🟢 1. ยิงตรงไปที่ API บน Render โดยไม่ผ่าน Vercel Proxy
       const res = await axios.get('https://gold-ai-api-aahg.onrender.com/predict');
 
-      if (res.data && res.data.length > 0) {
-        const formattedData = res.data.map((item: any) => ({
+      // 🟢 1. ดึงข้อมูลและรองรับกรณีข้อมูลถูกห่อมาใน Object
+      let rawData = res.data;
+      if (rawData && !Array.isArray(rawData) && Array.isArray(rawData.data)) {
+        rawData = rawData.data;
+      }
+
+      // 🟢 2. เช็กอย่างปลอดภัยด้วย Array.isArray() แทน .length
+      if (Array.isArray(rawData) && rawData.length > 0) {
+        const formattedData = rawData.map((item: any) => ({
           ...item,
           Close: parseFloat(item.Close),
           Predicted: item.Predicted ? parseFloat(item.Predicted) : null,
         }));
         setGoldData(formattedData);
+      } else {
+        console.error("Received non-array data:", rawData);
       }
 
-      // 🟢 2. ดักดึง Metrics แบบแยกส่วน (เพื่อไม่ให้หน้าเว็บพัง ถ้า /api/metrics ยังหาไม่เจอ)
+      // 🟢 3. ข้ามการ fetchMetrics ถ้ายังไม่มี API เพื่อไม่ให้เว็บขึ้น Error
       try {
-        await fetchMetrics(); 
+        if (typeof fetchMetrics === 'function') {
+          await fetchMetrics();
+        }
       } catch (metricsErr) {
-        console.warn("Fetch metrics skipped/failed:", metricsErr);
+        console.warn("Fetch metrics skipped:", metricsErr);
       }
 
     } catch (error) {
