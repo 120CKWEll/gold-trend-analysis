@@ -33,19 +33,34 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { date, open, high, low, close, volume } = body;
     
+    // 🟢 แปลงค่าให้เป็นตัวเลขอย่างปลอดภัย (ถ้าว่างหรือ NaN ให้เป็น 0)
+    const date = body.date;
+    const open = parseFloat(body.open) || 0;
+    const high = parseFloat(body.high) || 0;
+    const low = parseFloat(body.low) || 0;
+    const close = parseFloat(body.close) || 0;
+    const volume = parseInt(body.volume) || 0; // Volume ปกติใช้เป็นจำนวนเต็ม
+
     const { data, error } = await supabase
       .from('gold_prices')
       .insert([{ date, open, high, low, close, volume }])
       .select();
 
-    if (error) throw error;
+    // 🟢 ดักจับ Error จาก Supabase โดยตรง
+    if (error) {
+       console.error("Supabase Error Details:", error);
+       throw error;
+    }
 
     return NextResponse.json({ message: 'Data added successfully', data });
-  } catch (error) {
-    console.error("Insert error:", error);
-    return NextResponse.json({ error: 'Failed to add data' }, { status: 500 });
+  } catch (error: any) {
+    console.error("Insert error:", error.message || error);
+    // 🟢 ส่งข้อความ Error กลับไปให้ Console ฝั่งหน้าเว็บเห็นด้วย
+    return NextResponse.json(
+      { error: 'Failed to add data', details: error.message || error }, 
+      { status: 500 }
+    );
   }
 }
 
