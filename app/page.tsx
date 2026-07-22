@@ -93,7 +93,9 @@ export default function Dashboard() {
   const handlePredict = async () => {
     setLoading(true);
     try {
-      const res = await axios.get('/api/predict');
+      // 🟢 1. ยิงตรงไปที่ API บน Render โดยไม่ผ่าน Vercel Proxy
+      const res = await axios.get('https://gold-ai-api-aahg.onrender.com/predict');
+
       if (res.data && res.data.length > 0) {
         const formattedData = res.data.map((item: any) => ({
           ...item,
@@ -102,7 +104,14 @@ export default function Dashboard() {
         }));
         setGoldData(formattedData);
       }
-      await fetchMetrics(); // refresh metrics
+
+      // 🟢 2. ดักดึง Metrics แบบแยกส่วน (เพื่อไม่ให้หน้าเว็บพัง ถ้า /api/metrics ยังหาไม่เจอ)
+      try {
+        await fetchMetrics(); 
+      } catch (metricsErr) {
+        console.warn("Fetch metrics skipped/failed:", metricsErr);
+      }
+
     } catch (error) {
       console.error("Error predicting:", error);
       alert("Prediction failed. Please try again.");
