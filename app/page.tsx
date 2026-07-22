@@ -19,6 +19,7 @@ interface GoldData {
   volume: number;
   Predicted?: number | null;
   Date?: string;
+  isAI?: boolean; // 🟢 แฟล็กที่เพิ่มมาเพื่อแยกข้อมูล AI กับ Database
 }
 
 export default function Dashboard() {
@@ -46,27 +47,60 @@ export default function Dashboard() {
       const res = await axios.get('/api/metrics');
       setModelMetrics(res.data);
     } catch (error) {
-      console.error("Error fetching metrics:", error);
+      console.warn("Fetch metrics skipped (or 404):", error);
     }
   };
 
-  // Fetch gold price data
-  const fetchGoldData = async (searchDate = '') => {
+  // 🟢 ฟังก์ชันใหม่: โหลดข้อมูลจาก 2 แหล่งแล้วนำมาต่อกัน
+  const fetchAndMergeData = async (searchDate = '') => {
+    setLoading(true);
     try {
-      const res = await axios.get(`/api/gold${searchDate ? `?date=${searchDate}` : ''}`);
-      const formattedData = res.data.map((item: any) => ({
+      // 1. ดึงข้อมูลจากฐานข้อมูล Supabase
+      const dbRes = await axios.get(`/api/gold${searchDate ? `?date=${searchDate}` : ''}`);
+      const dbData = dbRes.data.map((item: any) => ({
         ...item,
         Date: item.date,
-        Close: item.close
+        Close: Number(item.close)
       }));
-      setGoldData(formattedData);
+
+      // 2. ดึงข้อมูล AI จาก Render (ถ้าไม่ได้กำลังค้นหาวันที่เฉพาะเจาะจงในตาราง)
+      let aiData: any[] = [];
+      if (!searchDate) {
+        try {
+          const aiRes = await axios.get('https://gold-ai-api-aahg.onrender.com/predict');
+          let rawAi = aiRes.data;
+          
+          if (typeof rawAi === 'string') rawAi = JSON.parse(rawAi);
+          if (rawAi && !Array.isArray(rawAi) && Array.isArray(rawAi.data)) rawAi = rawAi.data;
+
+          if (Array.isArray(rawAi)) {
+            aiData = rawAi.map((item: any) => ({
+              ...item,
+              Close: parseFloat(item.Close),
+              Predicted: item.Predicted ? parseFloat(item.Predicted) : null,
+              isAI: true // แปะป้ายว่านี่คือข้อมูลจาก AI
+            }));
+          }
+        } catch (aiErr) {
+          console.error("Failed to fetch AI data for merge:", aiErr);
+        }
+      }
+
+      // 3. นำข้อมูลมาต่อกันแล้วเรียงลำดับตามวันที่ เพื่อให้กราฟเส้นไม่พันกัน
+      const combined = [...dbData, ...aiData];
+      combined.sort((a, b) => new Date(a.Date || a.date).getTime() - new Date(b.Date || b.date).getTime());
+      
+      setGoldData(combined);
     } catch (error) {
-      console.error("Error fetching data:", error);
+      console.error("Error fetching and merging data:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
+  // โหลดข้อมูลเมื่อเปิดหน้าเว็บครั้งแรก
   useEffect(() => {
-    fetchGoldData();
+    fetchAndMergeData();
     fetchMetrics();
   }, []);
 
@@ -89,57 +123,12 @@ export default function Dashboard() {
     return true;
   });
 
-  // Run price prediction
+  // Run price prediction (สามารถใช้ปุ่มนี้ในการ Refresh กราฟได้)
   const handlePredict = async () => {
-    setLoading(true);
-    try {
-      const res = await axios.get('https://gold-ai-api-aahg.onrender.com/predict');
-
-      let rawData = res.data;
-
-      // 🟢 1. เช็กว่าถ้าข้อมูลถูกส่งมาเป็น "ข้อความ (String)" ให้แปลงเป็น Array ก่อน
-      if (typeof rawData === 'string') {
-        try {
-          rawData = JSON.parse(rawData);
-        } catch (parseError) {
-          console.error("Failed to parse string to JSON:", parseError);
-        }
-      }
-
-      // รองรับกรณีที่ข้อมูลถูกห่อมาใน Object .data
-      if (rawData && !Array.isArray(rawData) && Array.isArray(rawData.data)) {
-        rawData = rawData.data;
-      }
-
-      // 🟢 2. วาดกราฟ
-      if (Array.isArray(rawData) && rawData.length > 0) {
-        const formattedData = rawData.map((item: any) => ({
-          ...item,
-          Close: parseFloat(item.Close),
-          Predicted: item.Predicted ? parseFloat(item.Predicted) : null,
-        }));
-        setGoldData(formattedData);
-      } else {
-        console.error("Received non-array data:", rawData);
-      }
-
-      // 🟢 3. อัปเดต Metrics ข้ามไปถ้า Error 404 เพื่อไม่ให้กระทบกราฟ
-      try {
-        if (typeof fetchMetrics === 'function') {
-          await fetchMetrics();
-        }
-      } catch (metricsErr) {
-        console.warn("Fetch metrics skipped:", metricsErr);
-      }
-
-    } catch (error) {
-      console.error("Error predicting:", error);
-      alert("Prediction failed. Please try again.");
-    } finally {
-      setLoading(false);
-    }
+    await fetchAndMergeData();
   };
-  // Save form (add or edit)
+
+  // 🟢 Save form (add or edit) -> เมื่อบันทึกเสร็จให้โหลดกราฟใหม่ทันที
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
@@ -152,7 +141,7 @@ export default function Dashboard() {
       }
       setFormData({ date: '', open: 0, high: 0, low: 0, close: 0, volume: 0 });
       setIsEditing(null);
-      fetchGoldData(filterDate);
+      await fetchAndMergeData(filterDate); // สั่งดึงและต่อกราฟใหม่
     } catch (error) {
       console.error("Error saving:", error);
       alert('Failed to save record');
@@ -165,7 +154,7 @@ export default function Dashboard() {
       try {
         await axios.delete(`/api/gold?id=${deleteId}`);
         setDeleteId(null);
-        fetchGoldData(filterDate);
+        await fetchAndMergeData(filterDate);
       } catch (error) {
         console.error("Error deleting:", error);
       }
@@ -178,19 +167,17 @@ export default function Dashboard() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  // The API returns the actual close under different keys depending on the endpoint
-  // (`close` from /api/gold, `Close` from /api/predict) — normalize so both are handled.
   const getClose = (r: any): number => {
     const v = r?.Close ?? r?.close;
     return v === undefined || v === null || v === '' ? NaN : Number(v);
   };
 
-  // Latest actual price, for the header ticker
+  // Latest actual price
   const latestActual = [...goldData]
     .filter((r) => !isNaN(getClose(r)))
     .sort((a, b) => new Date(b.Date || b.date).getTime() - new Date(a.Date || a.date).getTime())[0];
 
-  // Upcoming forecast days (rows with no actual close but a predicted value), in date order
+  // Upcoming forecast days
   const forecastDays = [...goldData]
     .filter((r) => isNaN(getClose(r)) && r.Predicted)
     .sort((a, b) => new Date(a.Date || a.date).getTime() - new Date(b.Date || b.date).getTime())
@@ -299,7 +286,7 @@ export default function Dashboard() {
             className={`gold-btn flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-[#1A1408] shadow-lg shadow-black/30 whitespace-nowrap text-sm ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
           >
             {loading ? <Loader2 size={16} className="animate-spin" /> : <Sparkles size={16} strokeWidth={2.25} />}
-            {loading ? "Running forecast..." : "Forecast next 4 days"}
+            {loading ? "Refreshing Data..." : "Refresh Forecast"}
           </button>
         </div>
       </div>
@@ -329,7 +316,6 @@ export default function Dashboard() {
         {/* ================= TAB 1: DASHBOARD ================= */}
         {activeTab === 'dashboard' && (
           <div className="space-y-6 animate-in fade-in duration-300">
-
             {/* Stat cards */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div className="ingot-card rounded-xl p-5 flex items-start gap-4">
@@ -397,19 +383,14 @@ export default function Dashboard() {
                         </linearGradient>
                       </defs>
                       <XAxis dataKey="Date" axisLine={false} tickLine={false} tick={{ fill: '#6E6858', fontSize: 12 }} dy={10} minTickGap={40} />
-                      <YAxis axisLine={false} tickLine={false} tick={{ fill: '#6E6858', fontSize: 12 }} />
+                      <YAxis axisLine={false} tickLine={false} tick={{ fill: '#6E6858', fontSize: 12 }} domain={['auto', 'auto']} />
                       <CartesianGrid stroke="#2E2717" strokeDasharray="3 3" vertical={false} />
                       <Tooltip
                         contentStyle={{ borderRadius: '10px', border: '1px solid #33291A', background: '#1C1810', color: '#F3EFE4', boxShadow: '0 8px 20px -4px rgba(0,0,0,0.5)' }}
                         labelStyle={{ color: '#9A9384' }}
                         formatter={(value: any, name: any) => {
-                          if (value === null || value === undefined || isNaN(value) || value === "NaN") {
-                            return ["-", name];
-                          }
-                          return [
-                            `$${Number(value).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
-                            name
-                          ];
+                          if (value === null || value === undefined || isNaN(value) || value === "NaN") return ["-", name];
+                          return [`$${Number(value).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, name];
                         }}
                       />
                       <Area type="monotone" dataKey="Close" fill="url(#colorPrice)" fillOpacity={1} name="Actual" stroke="#E8C468" strokeWidth={3} />
@@ -455,7 +436,6 @@ export default function Dashboard() {
                     );
                   })}
                 </div>
-                <p className="text-xs text-[#6E6858] mt-4">Change is measured against the latest actual close{latestActual ? ` ($${getClose(latestActual).toFixed(2)} on ${latestActual.Date || latestActual.date})` : ''}.</p>
               </div>
             )}
 
@@ -507,7 +487,6 @@ export default function Dashboard() {
         {/* ================= TAB 2: MANAGE DATA ================= */}
         {activeTab === 'management' && (
           <div className="grid grid-cols-1 lg:grid-cols-[380px_1fr] gap-6 animate-in fade-in duration-300 items-start">
-
             {/* Add/edit form */}
             <div className="vault-panel rounded-2xl p-6 lg:sticky lg:top-24">
               <h2 className="font-display text-lg font-semibold mb-4 text-[#F3EFE4] flex items-center gap-2">
@@ -561,12 +540,12 @@ export default function Dashboard() {
               <div className="flex justify-between items-center mb-4 gap-3 flex-wrap">
                 <h2 className="font-display text-lg font-semibold text-[#F3EFE4] flex items-center gap-2">
                   <ListChecks size={18} strokeWidth={2.25} className="text-[var(--gold-bright)]" />
-                  Records
+                  Database Records
                 </h2>
                 <div className="flex items-center gap-2 bg-[#16130D] border border-[#2E2717] rounded-lg pl-3 pr-1 py-1">
                   <Search size={14} className="text-[#6E6858]" />
                   <span className="text-sm text-[#9A9384]">Filter by date</span>
-                  <input type="date" value={filterDate} onChange={e => { setFilterDate(e.target.value); fetchGoldData(e.target.value); }} className="bg-[#1C1810] border border-[#33291A] rounded-md p-1.5 text-sm outline-none focus:border-[var(--gold)] text-[#F3EFE4]" />
+                  <input type="date" value={filterDate} onChange={e => { setFilterDate(e.target.value); fetchAndMergeData(e.target.value); }} className="bg-[#1C1810] border border-[#33291A] rounded-md p-1.5 text-sm outline-none focus:border-[var(--gold)] text-[#F3EFE4]" />
                 </div>
               </div>
               <div className="overflow-x-auto max-h-[560px] border border-[#2E2717] rounded-lg">
@@ -580,24 +559,31 @@ export default function Dashboard() {
                     </tr>
                   </thead>
                   <tbody>
-                    {goldData.map((row) => (
+                    {/* 🟢 กรองเอาเฉพาะข้อมูลที่มี id (จาก Database จริง) มาแสดงเพื่อป้องกันบั๊ก */}
+                    {goldData.filter(row => row.id && !row.isAI).map((row) => (
                       <tr key={row.id} className="border-b border-[#221C12] hover:bg-[#1C1810] transition-colors">
                         <td className="py-3 px-4 font-mono text-[#D9D2C2]">{row.Date || row.date}</td>
                         <td className="py-3 px-4 font-mono text-[#F3EFE4]">{row.open ? `$${Number(row.open).toFixed(2)}` : "-"}</td>
                         <td className="py-3 px-4 font-mono text-[#F3EFE4]">{row.close ? `$${Number(row.close).toFixed(2)}` : "-"}</td>
                         <td className="py-3 px-4 text-center flex justify-center flex-wrap gap-1.5">
-                          <button onClick={() => setViewDetailModal(row)} className="flex items-center gap-1 text-[var(--positive)] bg-[var(--positive)]/10 px-3 py-1 rounded-md hover:bg-[var(--positive)]/20 font-medium">
+                          {/* 🟢 ส่วนที่เติมเต็มโค้ดที่ขาดหายไปด้านล่าง */}
+                          <button onClick={() => setViewDetailModal(row)} className="flex items-center gap-1 text-[var(--positive)] bg-[var(--positive)]/10 px-3 py-1 rounded-md hover:bg-[var(--positive)]/20 font-medium transition-colors">
                             <Eye size={13} /> View
                           </button>
-                          <button onClick={() => handleEdit(row)} className="flex items-center gap-1 text-[#7FA8D9] bg-[#7FA8D9]/10 px-3 py-1 rounded-md hover:bg-[#7FA8D9]/20 font-medium">
+                          <button onClick={() => handleEdit(row)} className="flex items-center gap-1 text-[var(--gold-bright)] bg-[var(--gold-bright)]/10 px-3 py-1 rounded-md hover:bg-[var(--gold-bright)]/20 font-medium transition-colors">
                             <Pencil size={13} /> Edit
                           </button>
-                          <button onClick={() => setDeleteId(row.id as number)} className="flex items-center gap-1 text-[var(--negative)] bg-[var(--negative)]/10 px-3 py-1 rounded-md hover:bg-[var(--negative)]/20 font-medium">
+                          <button onClick={() => setDeleteId(row.id as number)} className="flex items-center gap-1 text-[var(--negative)] bg-[var(--negative)]/10 px-3 py-1 rounded-md hover:bg-[var(--negative)]/20 font-medium transition-colors">
                             <Trash2 size={13} /> Delete
                           </button>
                         </td>
                       </tr>
                     ))}
+                    {goldData.filter(row => row.id && !row.isAI).length === 0 && (
+                      <tr>
+                        <td colSpan={4} className="py-8 text-center text-[#6E6858]">No records found in database.</td>
+                      </tr>
+                    )}
                   </tbody>
                 </table>
               </div>
@@ -606,57 +592,62 @@ export default function Dashboard() {
         )}
       </div>
 
-      {/* ================= MODAL: RECORD DETAIL ================= */}
+      {/* ================= MODALS ================= */}
+      {/* 🟢 Modal: ดูรายละเอียด */}
       {viewDetailModal && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="modal-card vault-panel rounded-2xl shadow-2xl shadow-black/60 max-w-md w-full overflow-hidden">
-            <div className="flex items-center justify-between px-6 py-4 border-b border-[#2E2717] bg-[#16130D]">
-              <div className="flex items-center gap-3">
-                <span className="icon-badge w-9 h-9 bg-[var(--gold-bright)]/10 text-[var(--gold-bright)]">
-                  <FileText size={17} strokeWidth={2.25} />
-                </span>
-                <h2 className="font-display text-lg font-semibold text-[#F3EFE4]">Record Detail</h2>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="modal-card bg-[#16130D] border border-[#33291A] rounded-2xl w-full max-w-sm overflow-hidden shadow-2xl">
+            <div className="p-5 border-b border-[#2E2717] flex justify-between items-center bg-[#1C1810]">
+              <h3 className="font-display font-semibold text-[var(--gold-bright)] flex items-center gap-2">
+                <FileText size={18} /> Record Details
+              </h3>
+              <button onClick={() => setViewDetailModal(null)} className="text-[#9A9384] hover:text-[#F3EFE4] transition-colors"><X size={18} /></button>
+            </div>
+            <div className="p-6 space-y-4">
+              <div className="flex justify-between border-b border-[#2E2717] pb-2">
+                <span className="text-xs uppercase text-[#6E6858] font-medium">Date</span>
+                <span className="font-mono text-[#F3EFE4]">{viewDetailModal.date || viewDetailModal.Date}</span>
               </div>
-              <button onClick={() => setViewDetailModal(null)} className="icon-badge w-8 h-8 text-[#9A9384] hover:text-[#F3EFE4] hover:bg-[#2E2717]">
-                <X size={16} strokeWidth={2.25} />
-              </button>
-            </div>
-            <div className="p-6 space-y-1 text-sm text-[#D9D2C2]">
-              <div className="flex justify-between py-2 border-b border-[#221C12]"><span className="text-[#9A9384]">Date</span> <span className="font-mono font-semibold">{viewDetailModal.Date || viewDetailModal.date}</span></div>
-              <div className="flex justify-between py-2 border-b border-[#221C12]"><span className="text-[#9A9384]">Open</span> <span className="font-mono">{viewDetailModal.open ? `$${viewDetailModal.open}` : '-'}</span></div>
-              <div className="flex justify-between py-2 border-b border-[#221C12]"><span className="text-[#9A9384]">High</span> <span className="font-mono">{viewDetailModal.high ? `$${viewDetailModal.high}` : '-'}</span></div>
-              <div className="flex justify-between py-2 border-b border-[#221C12]"><span className="text-[#9A9384]">Low</span> <span className="font-mono">{viewDetailModal.low ? `$${viewDetailModal.low}` : '-'}</span></div>
-              <div className="flex justify-between py-2 border-b border-[#221C12]"><span className="text-[#9A9384]">Close</span> <span className="font-mono font-semibold text-[#7FA8D9]">{viewDetailModal.close ? `$${viewDetailModal.close}` : '-'}</span></div>
-              <div className="flex justify-between py-2 border-b border-[#221C12]"><span className="text-[#9A9384]">Volume</span> <span className="font-mono">{viewDetailModal.volume ? viewDetailModal.volume.toLocaleString() : '-'}</span></div>
-              {viewDetailModal.Predicted && (
-                <div className="flex justify-between items-center pt-3 mt-1">
-                  <span className="flex items-center gap-1.5 text-[var(--gold-bright)] font-medium">
-                    <Sparkles size={14} /> AI Predicted
-                  </span>
-                  <span className="font-mono font-bold text-[var(--gold-bright)]">${Number(viewDetailModal.Predicted).toFixed(2)}</span>
-                </div>
-              )}
-            </div>
-            <div className="px-6 pb-6">
-              <button onClick={() => setViewDetailModal(null)} className="w-full bg-[#221C12] border border-[#33291A] text-[#D9D2C2] py-2.5 rounded-lg font-semibold hover:bg-[#2E2717] transition-colors">Close</button>
+              <div className="flex justify-between border-b border-[#2E2717] pb-2">
+                <span className="text-xs uppercase text-[#6E6858] font-medium">Open</span>
+                <span className="font-mono text-[#F3EFE4]">${Number(viewDetailModal.open).toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between border-b border-[#2E2717] pb-2">
+                <span className="text-xs uppercase text-[#6E6858] font-medium">High</span>
+                <span className="font-mono text-[#F3EFE4]">${Number(viewDetailModal.high).toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between border-b border-[#2E2717] pb-2">
+                <span className="text-xs uppercase text-[#6E6858] font-medium">Low</span>
+                <span className="font-mono text-[#F3EFE4]">${Number(viewDetailModal.low).toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between border-b border-[#2E2717] pb-2">
+                <span className="text-xs uppercase text-[#6E6858] font-medium">Close</span>
+                <span className="font-mono text-[var(--gold-bright)] font-bold">${Number(viewDetailModal.close).toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between pb-2">
+                <span className="text-xs uppercase text-[#6E6858] font-medium">Volume</span>
+                <span className="font-mono text-[#F3EFE4]">{Number(viewDetailModal.volume).toLocaleString()}</span>
+              </div>
             </div>
           </div>
         </div>
       )}
 
-      {/* ================= MODAL: CONFIRM DELETE ================= */}
+      {/* 🟢 Modal: ยืนยันการลบ */}
       {deleteId && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="modal-card vault-panel rounded-2xl shadow-2xl shadow-black/60 max-w-sm w-full p-6 text-center">
-            <span className="icon-badge w-14 h-14 rounded-full bg-[var(--negative)]/10 text-[var(--negative)] mx-auto mb-4">
-              <TriangleAlert size={26} strokeWidth={2} />
-            </span>
-            <h2 className="font-display text-xl font-semibold text-[#F3EFE4] mb-2">Confirm Delete</h2>
-            <p className="text-[#9A9384] text-sm mb-6 leading-relaxed">Are you sure you want to delete this record? This action cannot be undone.</p>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+          <div className="modal-card bg-[#1C1810] border border-[#33291A] rounded-2xl w-full max-w-sm overflow-hidden shadow-2xl p-6 text-center">
+            <div className="w-16 h-16 rounded-full bg-[var(--negative)]/10 text-[var(--negative)] flex items-center justify-center mx-auto mb-4">
+              <TriangleAlert size={32} strokeWidth={2} />
+            </div>
+            <h3 className="text-lg font-semibold text-[#F3EFE4] mb-2">Delete Record?</h3>
+            <p className="text-sm text-[#9A9384] mb-6">Are you sure you want to delete this record? This action cannot be undone.</p>
             <div className="flex gap-3">
-              <button onClick={() => setDeleteId(null)} className="flex-1 bg-[#221C12] border border-[#33291A] text-[#D9D2C2] py-2.5 rounded-lg font-semibold hover:bg-[#2E2717] transition-colors">Cancel</button>
-              <button onClick={executeDelete} className="flex-1 bg-[var(--negative)] text-white py-2.5 rounded-lg font-semibold hover:brightness-110 shadow-md shadow-black/30 flex items-center justify-center gap-2 transition-all">
-                <Trash2 size={15} /> Delete
+              <button onClick={() => setDeleteId(null)} className="flex-1 bg-[#221C12] border border-[#33291A] text-[#D9D2C2] py-2.5 rounded-xl hover:bg-[#2E2717] font-medium transition-colors">
+                Cancel
+              </button>
+              <button onClick={executeDelete} className="flex-1 bg-[var(--negative)] text-white py-2.5 rounded-xl hover:bg-[#B04A30] font-medium transition-colors shadow-lg shadow-red-900/20">
+                Yes, Delete
               </button>
             </div>
           </div>
