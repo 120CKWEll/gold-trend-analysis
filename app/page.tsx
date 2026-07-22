@@ -95,13 +95,23 @@ export default function Dashboard() {
     try {
       const res = await axios.get('https://gold-ai-api-aahg.onrender.com/predict');
 
-      // 🟢 1. ดึงข้อมูลและรองรับกรณีข้อมูลถูกห่อมาใน Object
       let rawData = res.data;
+
+      // 🟢 1. เช็กว่าถ้าข้อมูลถูกส่งมาเป็น "ข้อความ (String)" ให้แปลงเป็น Array ก่อน
+      if (typeof rawData === 'string') {
+        try {
+          rawData = JSON.parse(rawData);
+        } catch (parseError) {
+          console.error("Failed to parse string to JSON:", parseError);
+        }
+      }
+
+      // รองรับกรณีที่ข้อมูลถูกห่อมาใน Object .data
       if (rawData && !Array.isArray(rawData) && Array.isArray(rawData.data)) {
         rawData = rawData.data;
       }
 
-      // 🟢 2. เช็กอย่างปลอดภัยด้วย Array.isArray() แทน .length
+      // 🟢 2. วาดกราฟ
       if (Array.isArray(rawData) && rawData.length > 0) {
         const formattedData = rawData.map((item: any) => ({
           ...item,
@@ -113,7 +123,7 @@ export default function Dashboard() {
         console.error("Received non-array data:", rawData);
       }
 
-      // 🟢 3. ข้ามการ fetchMetrics ถ้ายังไม่มี API เพื่อไม่ให้เว็บขึ้น Error
+      // 🟢 3. อัปเดต Metrics ข้ามไปถ้า Error 404 เพื่อไม่ให้กระทบกราฟ
       try {
         if (typeof fetchMetrics === 'function') {
           await fetchMetrics();
@@ -129,7 +139,6 @@ export default function Dashboard() {
       setLoading(false);
     }
   };
-
   // Save form (add or edit)
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
