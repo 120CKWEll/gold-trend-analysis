@@ -1,4 +1,4 @@
-# GoldTrend Analysis
+# GoldTrend Analysis 
 
 <img width="1208" height="1008" alt="image" src="https://github.com/user-attachments/assets/4d6a67ca-e7a5-4574-9f8f-70c300e97af8" />
 
@@ -44,6 +44,7 @@
 
 
 ---
+## Live Demo: https://gold-trend-analysis-six.vercel.app
 
 ## Getting Started 
 
