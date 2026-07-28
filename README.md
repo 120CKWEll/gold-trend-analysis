@@ -1,4 +1,4 @@
-# 🏆 GoldTrend Analysis
+# GoldTrend Analysis
 
 <img width="1208" height="1008" alt="image" src="https://github.com/user-attachments/assets/4d6a67ca-e7a5-4574-9f8f-70c300e97af8" />
 
@@ -7,7 +7,7 @@
 
 ---
 
-## ✨ Features 
+## Features 
 
 - **📈 4-Day Price Forecasting:** พยากรณ์ราคาทองคำล่วงหน้า 4 วันอัตโนมัติด้วย Machine Learning 
 - **📊 Interactive Dashboard:** กราฟเปรียบเทียบแนวโน้มราคาจริง (Actual) และราคาคาดการณ์ (Predicted) พร้อมระบบกรองวันที่
@@ -17,7 +17,7 @@
 
 ---
 
-## 💻 Tech Stack 
+## Tech Stack 
 
 **Frontend:**
 - [Next.js](https://nextjs.org/) / [React](https://reactjs.org/)
@@ -33,7 +33,7 @@
 
 ---
 
-## 📸 Screenshots 
+## Screenshots 
 
 ### 1. Dashboard & Forecasting
 <img width="1198" height="1080" alt="image" src="https://github.com/user-attachments/assets/8656aa80-777b-4147-a9f2-c3471c7eef7c" />
@@ -45,12 +45,12 @@
 
 ---
 
-## 🚀 Getting Started 
+## Getting Started 
 
 ทำตามขั้นตอนด้านล่างนี้เพื่อรันโปรเจกต์ในเครื่องของคุณ:
 
-### 1. Clone Repository
 ```bash
+1. Clone Repository
 git clone https://github.com/120CKWEll/gold-trend-analysis.git
 cd gold-trend-analysis
 2. Install Dependencies
