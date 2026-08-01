@@ -86,10 +86,33 @@ export default function Dashboard() {
         }
       }
 
-      // 3. นำข้อมูลมาต่อกันแล้วเรียงลำดับตามวันที่ เพื่อให้กราฟเส้นไม่พันกัน
-      const combined = [...dbData, ...aiData];
+      // 3. นำข้อมูลมารวมกัน (Merge) โดยใช้วันที่ เพื่อไม่ให้บรรทัดซ้ำ
+      const dataMap = new Map();
+
+      // ก้อนที่ 1: ใส่ข้อมูลจากฐานข้อมูล (dbData) ลงไปก่อน
+      dbData.forEach((item: any) => {
+        const dateKey = item.Date || item.date;
+        if (dateKey) dataMap.set(dateKey, item);
+      });
+
+      // ก้อนที่ 2: เอาข้อมูลจาก AI (aiData) มาใส่ทับ/เติมเต็ม
+      aiData.forEach((item: any) => {
+        const dateKey = item.Date || item.date;
+        if (dateKey) {
+          if (dataMap.has(dateKey)) {
+            // ถ้าวันที่ตรงกัน ให้เอาข้อมูลมารวมกัน (เอา Predicted มาแปะใส่ Actual)
+            dataMap.set(dateKey, { ...dataMap.get(dateKey), ...item });
+          } else {
+            // ถ้าเป็นวันที่พยากรณ์ล่วงหน้า (ยังไม่มีในฐานข้อมูล) ให้เพิ่มเข้าไปเลย
+            dataMap.set(dateKey, item);
+          }
+        }
+      });
+
+      // แปลงกลับเป็น Array และเรียงลำดับเวลาตามเดิม เพื่อให้กราฟเส้นไม่พันกัน
+      const combined = Array.from(dataMap.values());
       combined.sort((a, b) => new Date(a.Date || a.date).getTime() - new Date(b.Date || b.date).getTime());
-      
+
       setGoldData(combined);
     } catch (error) {
       console.error("Error fetching and merging data:", error);
