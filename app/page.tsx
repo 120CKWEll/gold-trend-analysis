@@ -583,7 +583,7 @@ export default function Dashboard() {
                   </thead>
                   <tbody>
                     {/* 🟢 กรองเอาเฉพาะข้อมูลที่มี id (จาก Database จริง) มาแสดงเพื่อป้องกันบั๊ก */}
-                    {goldData.filter(row => row.id && !row.isAI).map((row) => (
+                    {goldData.filter(row => row.id).map((row) => (
                       <tr key={row.id} className="border-b border-[#221C12] hover:bg-[#1C1810] transition-colors">
                         <td className="py-3 px-4 font-mono text-[#D9D2C2]">{row.Date || row.date}</td>
                         <td className="py-3 px-4 font-mono text-[#F3EFE4]">{row.open ? `$${Number(row.open).toFixed(2)}` : "-"}</td>
@@ -602,7 +602,7 @@ export default function Dashboard() {
                         </td>
                       </tr>
                     ))}
-                    {goldData.filter(row => row.id && !row.isAI).length === 0 && (
+                    {goldData.filter(row => row.id).length === 0 && (
                       <tr>
                         <td colSpan={4} className="py-8 text-center text-[#6E6858]">No records found in database.</td>
                       </tr>
